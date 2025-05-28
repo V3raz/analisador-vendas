@@ -60,9 +60,21 @@ if uploaded_file:
 
         # Destaques principais
         total_geral = df["Valor da Venda"].sum()
-        produto_mais_vendido = por_produto.sort_values("Valor da Venda", ascending=False).iloc[0]
+
         regiao_top = por_regiao.sort_values("Valor da Venda", ascending=False).iloc[0]
 
+        # Por valor (faturamento)
+        produto_valor = por_produto.sort_values("Valor da Venda", ascending=False).iloc[0]
+
+        # Por quantidade (mais vezes vendido)
+        produto_qtd = df["Produto"].value_counts()
+        produto_qtd_nome = produto_qtd.idxmax()
+        produto_qtd_total = produto_qtd.max()
+
+        st.success(f"💵 Produto com maior faturamento: {produto_valor['Produto']} (R$ {produto_valor['Valor da Venda']:,.2f})")
+        st.success(f"📦 Produto mais vendido (quantidade): {produto_qtd_nome} ({produto_qtd_total} vendas)")
+
+        
         st.subheader("✅ Resumo das Vendas")
         st.metric(label="💰 Total Geral Vendido", value=f"R$ {total_geral:,.2f}")
         st.success(f"Produto mais vendido: {produto_mais_vendido['Produto']}")
