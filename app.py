@@ -2,7 +2,6 @@
 # IMPORTANTE!
 # Para rodar o programa como app, abra o terminal e digite:
 # python -m streamlit run app.py
-# Ou use o executável .exe gerado com PyInstaller.
 #-------------------------------------------------------------------------------------------------------------------------
 
 import streamlit as st
@@ -14,18 +13,18 @@ from datetime import datetime
 # Configuração da página
 st.set_page_config(page_title="Analisador de Vendas", layout="centered")
 
-# Cabeçalho com imagem opcional (substitua se quiser)
+# Cabeçalho com imagem (opcional)
 col1, col2, col3 = st.columns([1, 3, 1])
 with col2:
-    st.image("https://i.imgur.com/h2OZB8n.png", width=120)  # Ou troque pela sua própria imagem
+    st.image("https://i.imgur.com/h2OZB8n.png", width=120)
 
 st.title("📊 Analisador de Vendas com Python")
-st.write("Faça upload da planilha de vendas (.xlsx) e receba uma análise automática com gráficos e relatório Excel.")
+st.write("Faça upload da planilha de vendas (.xlsx) e receba uma análise automática com gráficos e relatório em Excel.")
 
 # Upload da planilha
 uploaded_file = st.file_uploader("📎 Faça upload da planilha de vendas", type=["xlsx"])
 
-# Funções auxiliares
+# Funções
 def carregar_dados(file):
     df = pd.read_excel(file)
     if df.empty:
@@ -41,15 +40,32 @@ def gerar_relatorios(df):
     por_regiao = df.groupby("Região")["Valor da Venda"].sum().reset_index()
     return por_produto_valor, por_mes, por_regiao
 
-def gerar_excel(produto, mes, regiao):
+def gerar_excel(produto, mes, regiao, resumo):
     output = BytesIO()
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        resumo.to_excel(writer, sheet_name="Resumo", index=False)
         produto.to_excel(writer, sheet_name="Por Produto", index=False)
         mes.to_excel(writer, sheet_name="Por Mês", index=False)
         regiao.to_excel(writer, sheet_name="Por Região", index=False)
+
+        # Formatação
+        workbook = writer.book
+        for sheet in writer.sheets:
+            ws = writer.sheets[sheet]
+            for column_cells in ws.columns:
+                length = max(len(str(cell.value)) for cell in column_cells)
+                ws.column_dimensions[column_cells[0].column_letter].width = length + 2
+            for row in ws.iter_rows():
+                for cell in row:
+                    cell.border = openpyxl.styles.Border(
+                        left=openpyxl.styles.Side(style="thin"),
+                        right=openpyxl.styles.Side(style="thin"),
+                        top=openpyxl.styles.Side(style="thin"),
+                        bottom=openpyxl.styles.Side(style="thin"),
+                    )
     return output.getvalue()
 
-# Processamento
+# Processamento principal
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
     colunas_esperadas = {"Data da Venda", "Produto", "Região", "Valor da Venda"}
@@ -60,17 +76,17 @@ if uploaded_file:
         df = carregar_dados(uploaded_file)
         por_produto_valor, por_mes, por_regiao = gerar_relatorios(df)
 
-        # Análises de produto
+        # Análises
+        total_geral = df["Valor da Venda"].sum()
         produto_faturamento = por_produto_valor.sort_values("Valor da Venda", ascending=False).iloc[0]
 
         produto_qtd = df["Produto"].value_counts()
         produto_mais_vendido_qtd = produto_qtd.idxmax()
         qtd_vendas = produto_qtd.max()
 
-        # Destaques principais
-        total_geral = df["Valor da Venda"].sum()
         regiao_top = por_regiao.sort_values("Valor da Venda", ascending=False).iloc[0]
 
+        # Resumo na tela
         st.subheader("✅ Resumo das Vendas")
         st.metric(label="💰 Total Geral Vendido", value=f"R$ {total_geral:,.2f}")
         st.success(f"💵 Produto com maior faturamento: {produto_faturamento['Produto']} (R$ {produto_faturamento['Valor da Venda']:,.2f})")
@@ -94,11 +110,25 @@ if uploaded_file:
         st.subheader("📊 Gráfico de Vendas por Região")
         st.bar_chart(por_regiao.set_index("Região"))
 
+        # Planilha "Por Produto" com quantidade
+        produto_completo = por_produto_valor.copy()
+        produto_completo["Quantidade de Vendas"] = df["Produto"].value_counts().reindex(produto_completo["Produto"]).values
+
+        # Planilha "Resumo"
+        resumo_df = pd.DataFrame({
+            "Resumo": [
+                f"Total Geral Vendido: R$ {total_geral:,.2f}",
+                f"Produto com maior faturamento: {produto_faturamento['Produto']}",
+                f"Produto mais vendido (quantidade): {produto_mais_vendido_qtd}",
+                f"Região com maior faturamento: {regiao_top['Região']}"
+            ]
+        })
+
         # Botão de download
         nome_arquivo = f"relatorio_vendas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
         st.download_button(
             label="📥 Baixar Relatório Excel",
-            data=gerar_excel(por_produto_valor, por_mes, por_regiao),
+            data=gerar_excel(produto_completo, por_mes, por_regiao, resumo_df),
             file_name=nome_arquivo,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
