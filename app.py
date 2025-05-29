@@ -15,8 +15,13 @@ from openpyxl.chart import BarChart, Reference
 # Configuração da página
 st.set_page_config(page_title="Analisador de Vendas", layout="centered")
 
+# Cabeçalho com logo
+col1, col2, col3 = st.columns([1, 3, 1])
+with col2:
+    st.image("https://i.imgur.com/h2OZB8n.png", width=120)
+
 st.title("📊 Analisador de Vendas com Python")
-st.write("Faça upload da planilha de vendas (.xlsx) e gere um relatório profissional em Excel.")
+st.write("Faça upload da planilha de vendas (.xlsx) e gere um relatório profissional em Excel com resumos visuais.")
 
 # Upload do arquivo
 uploaded_file = st.file_uploader("📎 Faça upload da planilha de vendas", type=["xlsx"])
@@ -106,7 +111,7 @@ def gerar_excel(df):
     wb.save(output)
     return output.getvalue()
 
-# Execução do app
+# Execução principal
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
@@ -115,6 +120,29 @@ if uploaded_file:
         st.error("❌ A planilha deve conter as colunas: Data da Venda, Produto, Região, Valor da Venda.")
     else:
         st.success("✅ Planilha validada com sucesso. Pronto para gerar o relatório!")
+
+        # ▶️ Análises para a interface
+        df["Data da Venda"] = pd.to_datetime(df["Data da Venda"])
+        df["Mês"] = df["Data da Venda"].dt.to_period("M").astype(str)
+        total_geral = df["Valor da Venda"].sum()
+
+        produto_valor = df.groupby("Produto")["Valor da Venda"].sum().reset_index()
+        produto_faturamento = produto_valor.sort_values("Valor da Venda", ascending=False).iloc[0]
+
+        produto_qtd = df["Produto"].value_counts()
+        produto_top_qtd = produto_qtd.idxmax()
+        qtd_vendas = produto_qtd.max()
+
+        regiao_top = df.groupby("Região")["Valor da Venda"].sum().reset_index().sort_values("Valor da Venda", ascending=False).iloc[0]
+
+        # ▶️ Exibição no site
+        st.subheader("📌 Resumo das Vendas")
+        st.metric(label="💰 Total Geral Vendido", value=f"R$ {total_geral:,.2f}")
+        st.success(f"💵 Produto com maior faturamento: {produto_faturamento['Produto']} (R$ {produto_faturamento['Valor da Venda']:,.2f})")
+        st.success(f"📦 Produto mais vendido (quantidade): {produto_top_qtd} ({qtd_vendas} vendas)")
+        st.success(f"🌍 Região com maior faturamento: {regiao_top['Região']}")
+
+        # ▶️ Botão de download
         st.download_button(
             label="📥 Baixar Relatório Excel Profissional",
             data=gerar_excel(df),
