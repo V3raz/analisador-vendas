@@ -18,7 +18,7 @@ st.set_page_config(page_title="Analisador de Vendas", layout="centered")
 # Cabeçalho com logo
 col1, col2, col3 = st.columns([1, 3, 1])
 with col2:
-    st.image("https://i.imgur.com/h2OZB8n.png", width=120)
+    st.image("Black and White Smart Technology Logo.png", width=120)
 
 st.title("📊 Analisador de Vendas com Python")
 st.write("Faça upload da planilha de vendas (.xlsx) e gere um relatório profissional em Excel com resumos visuais.")
