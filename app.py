@@ -17,10 +17,8 @@ st.set_page_config(page_title="Analisador de Vendas", layout="centered")
 
 # Cabeçalho com logo
 col1, col2, col3 = st.columns([1, 3, 1])
-with col2:
-    st.image("Logo.png", width=120)
 
-st.title("📊 Analisador de Vendas com Python")
+st.title("Analisador de Vendas com Python")
 st.write("Faça upload da planilha de vendas (.xlsx) e gere um relatório profissional em Excel com resumos visuais.")
 
 # Upload do arquivo
@@ -117,11 +115,11 @@ if uploaded_file:
 
     colunas_esperadas = {"Data da Venda", "Produto", "Região", "Valor da Venda"}
     if not colunas_esperadas.issubset(set(df.columns)):
-        st.error("❌ A planilha deve conter as colunas: Data da Venda, Produto, Região, Valor da Venda.")
+        st.error("A planilha deve conter as colunas: Data da Venda, Produto, Região, Valor da Venda.")
     else:
-        st.success("✅ Planilha validada com sucesso. Pronto para gerar o relatório!")
+        st.success("Planilha validada com sucesso. Pronto para gerar o relatório!")
 
-        # ▶️ Análises para a interface
+        #Análises para a interface
         df["Data da Venda"] = pd.to_datetime(df["Data da Venda"])
         df["Mês"] = df["Data da Venda"].dt.to_period("M").astype(str)
         total_geral = df["Valor da Venda"].sum()
@@ -135,16 +133,16 @@ if uploaded_file:
 
         regiao_top = df.groupby("Região")["Valor da Venda"].sum().reset_index().sort_values("Valor da Venda", ascending=False).iloc[0]
 
-        # ▶️ Exibição no site
-        st.subheader("📌 Resumo das Vendas")
-        st.metric(label="💰 Total Geral Vendido", value=f"R$ {total_geral:,.2f}")
-        st.success(f"💵 Produto com maior faturamento: {produto_faturamento['Produto']} (R$ {produto_faturamento['Valor da Venda']:,.2f})")
-        st.success(f"📦 Produto mais vendido (quantidade): {produto_top_qtd} ({qtd_vendas} vendas)")
-        st.success(f"🌍 Região com maior faturamento: {regiao_top['Região']}")
+        #Exibição no site
+        st.subheader("Resumo das Vendas")
+        st.metric(label="Total Geral Vendido", value=f"R$ {total_geral:,.2f}")
+        st.success(f"Produto com maior faturamento: {produto_faturamento['Produto']} (R$ {produto_faturamento['Valor da Venda']:,.2f})")
+        st.success(f"Produto mais vendido (quantidade): {produto_top_qtd} ({qtd_vendas} vendas)")
+        st.success(f"Região com maior faturamento: {regiao_top['Região']}")
 
-        # ▶️ Botão de download
+        # Botão de download
         st.download_button(
-            label="📥 Baixar Relatório Excel Profissional",
+            label="Baixar Relatório Excel Profissional",
             data=gerar_excel(df),
             file_name=f"relatorio_vendas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
