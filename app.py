@@ -22,7 +22,7 @@ st.title("Analisador de Vendas com Python")
 st.write("Faça upload da planilha de vendas (.xlsx) e gere um relatório profissional em Excel com resumos visuais.")
 
 # Upload do arquivo
-uploaded_file = st.file_uploader("📎 Faça upload da planilha de vendas", type=["xlsx"])
+uploaded_file = st.file_uploader("Faça upload da planilha de vendas", type=["xlsx"])
 
 # Função para gerar Excel profissional
 def gerar_excel(df):
