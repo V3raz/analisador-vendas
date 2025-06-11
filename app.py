@@ -142,7 +142,7 @@ if uploaded_file:
 
         # Botão de download
         st.download_button(
-            label="Baixar Relatório Excel Profissional",
+            label="Baixar Relatório Excel",
             data=gerar_excel(df),
             file_name=f"relatorio_vendas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
